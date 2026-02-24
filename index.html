@@ -1,0 +1,1699 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="color-scheme" content="light dark" />
+  <title>Internet-ABC Quiz</title>
+  <style>
+    /* =========================================================
+       Internet-ABC Quiz — Single-File, offline, no dependencies
+       ========================================================= */
+
+    :root{
+      --bg0:#0b1220;
+      --bg1:#0e1a2f;
+      --glass: rgba(255,255,255,.74);
+      --glass-strong: rgba(255,255,255,.86);
+      --stroke: rgba(255,255,255,.20);
+      --text:#0f172a;
+      --muted:#475569;
+      --shadow: 0 24px 70px rgba(0,0,0,.35);
+      --shadow2: 0 14px 34px rgba(0,0,0,.25);
+      --primary:#e11d2e;         /* red */
+      --primary2:#b1121f;
+      --primary-ink:#ffffff;
+      --secondary: rgba(15,23,42,.08);
+      --secondary-hover: rgba(15,23,42,.12);
+      --focus: rgba(225, 29, 46, .35);
+      --ok: #0ea5e9;
+      --warn: #f59e0b;
+      --radius: 18px;
+      --radius2: 14px;
+      --ring: 0 0 0 4px var(--focus);
+      --max: 980px;
+      --card-max: 760px;
+      --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+
+    /* Dark mode: keep high contrast and calm */
+    @media (prefers-color-scheme: dark){
+      :root{
+        --glass: rgba(17, 25, 40, .70);
+        --glass-strong: rgba(17, 25, 40, .82);
+        --stroke: rgba(255,255,255,.12);
+        --text:#e5e7eb;
+        --muted:#a1a1aa;
+        --secondary: rgba(255,255,255,.08);
+        --secondary-hover: rgba(255,255,255,.12);
+        --shadow: 0 28px 80px rgba(0,0,0,.55);
+        --shadow2: 0 16px 40px rgba(0,0,0,.38);
+      }
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      font-family: var(--font);
+      color: var(--text);
+      background: linear-gradient(160deg, var(--bg0), var(--bg1));
+      overflow-x:hidden;
+    }
+
+    /* =========================
+       Calm "media landscape" background (CSS + inline SVG)
+       - No external images
+       - Uses gradients + SVG data URI
+       ========================= */
+    .bg{
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      background:
+        radial-gradient(900px 520px at 15% 18%, rgba(14,165,233,.18), transparent 60%),
+        radial-gradient(700px 420px at 85% 22%, rgba(225,29,46,.14), transparent 60%),
+        radial-gradient(900px 540px at 45% 84%, rgba(34,197,94,.10), transparent 62%),
+        linear-gradient(160deg, var(--bg0), var(--bg1));
+    }
+    .bg::before{
+      content:"";
+      position:absolute;
+      inset:-60px;
+      background:
+        /* subtle grid */
+        linear-gradient(to right, rgba(255,255,255,.06) 1px, transparent 1px) 0 0/56px 56px,
+        linear-gradient(to bottom, rgba(255,255,255,.05) 1px, transparent 1px) 0 0/56px 56px;
+      opacity:.35;
+      filter: blur(.1px);
+      mask-image: radial-gradient(circle at 50% 40%, black 0%, black 60%, transparent 85%);
+    }
+    .bg::after{
+      content:"";
+      position:absolute;
+      inset:0;
+      opacity:.62;
+      background-repeat:no-repeat;
+      background-size: cover;
+      background-position: center bottom;
+      /* Inline SVG "media skyline": devices, wifi arcs, nodes */
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1600' height='900' viewBox='0 0 1600 900'%3E%3Cdefs%3E%3CradialGradient id='g1' cx='50%25' cy='30%25' r='75%25'%3E%3Cstop offset='0%25' stop-color='%23ffffff' stop-opacity='0.10'/%3E%3Cstop offset='70%25' stop-color='%23ffffff' stop-opacity='0.00'/%3E%3C/radialGradient%3E%3ClinearGradient id='h' x1='0' x2='0' y1='0' y2='1'%3E%3Cstop offset='0%25' stop-color='%23ffffff' stop-opacity='0.10'/%3E%3Cstop offset='100%25' stop-color='%23ffffff' stop-opacity='0.02'/%3E%3C/linearGradient%3E%3Cfilter id='blur'%3E%3CfeGaussianBlur stdDeviation='1.2'/%3E%3C/filter%3E%3C/defs%3E%3Crect width='1600' height='900' fill='url(%23g1)'/%3E%3C!-- network lines --%3E%3Cg stroke='%23ffffff' stroke-opacity='0.14' stroke-width='2'%3E%3Cpath d='M130 620 C 260 520, 420 560, 560 480 S 900 520, 1060 440 S 1340 500, 1490 420' fill='none'/%3E%3Cpath d='M180 720 C 340 650, 420 700, 620 640 S 960 700, 1180 640 S 1400 700, 1540 660' fill='none'/%3E%3C/g%3E%3C!-- nodes --%3E%3Cg fill='%23ffffff' fill-opacity='0.18'%3E%3Ccircle cx='130' cy='620' r='5'/%3E%3Ccircle cx='560' cy='480' r='5'/%3E%3Ccircle cx='1060' cy='440' r='5'/%3E%3Ccircle cx='1490' cy='420' r='5'/%3E%3Ccircle cx='180' cy='720' r='5'/%3E%3Ccircle cx='620' cy='640' r='5'/%3E%3Ccircle cx='1180' cy='640' r='5'/%3E%3Ccircle cx='1540' cy='660' r='5'/%3E%3C/g%3E%3C!-- devices skyline --%3E%3Cg opacity='0.22'%3E%3Crect x='80' y='510' width='160' height='250' rx='18' fill='url(%23h)' stroke='%23ffffff' stroke-opacity='0.18'/%3E%3Crect x='115' y='545' width='90' height='145' rx='10' fill='%23ffffff' fill-opacity='0.06' stroke='%23ffffff' stroke-opacity='0.15'/%3E%3Crect x='310' y='560' width='260' height='200' rx='22' fill='url(%23h)' stroke='%23ffffff' stroke-opacity='0.18'/%3E%3Crect x='340' y='590' width='200' height='120' rx='14' fill='%23ffffff' fill-opacity='0.06' stroke='%23ffffff' stroke-opacity='0.15'/%3E%3Crect x='610' y='490' width='210' height='270' rx='20' fill='url(%23h)' stroke='%23ffffff' stroke-opacity='0.18'/%3E%3Crect x='640' y='530' width='150' height='150' rx='14' fill='%23ffffff' fill-opacity='0.06' stroke='%23ffffff' stroke-opacity='0.15'/%3E%3Crect x='860' y='580' width='320' height='180' rx='22' fill='url(%23h)' stroke='%23ffffff' stroke-opacity='0.18'/%3E%3Crect x='895' y='610' width='250' height='100' rx='14' fill='%23ffffff' fill-opacity='0.06' stroke='%23ffffff' stroke-opacity='0.15'/%3E%3Crect x='1220' y='520' width='260' height='240' rx='22' fill='url(%23h)' stroke='%23ffffff' stroke-opacity='0.18'/%3E%3Crect x='1250' y='555' width='200' height='140' rx='14' fill='%23ffffff' fill-opacity='0.06' stroke='%23ffffff' stroke-opacity='0.15'/%3E%3C/g%3E%3C!-- wifi symbol --%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='0.18' stroke-width='10' stroke-linecap='round'%3E%3Cpath d='M770 230 C 840 170, 920 170, 990 230'/%3E%3Cpath d='M800 285 C 850 245, 910 245, 960 285'/%3E%3Cpath d='M835 340 C 865 318, 895 318, 925 340'/%3E%3C/g%3E%3Ccircle cx='880' cy='385' r='12' fill='%23ffffff' fill-opacity='0.20'/%3E%3C!-- fog layer --%3E%3Crect x='0' y='450' width='1600' height='450' fill='%23000000' fill-opacity='0.08' filter='url(%23blur)'/%3E%3C/svg%3E");
+      mask-image: linear-gradient(to top, black 0%, black 70%, transparent 95%);
+    }
+
+    /* =========================
+       App layout
+       ========================= */
+    .wrap{
+      min-height: 100%;
+      display:flex;
+      align-items: stretch;
+      justify-content:center;
+      padding: clamp(16px, 2.2vw, 28px);
+    }
+
+    .app{
+      width: min(var(--max), 100%);
+      display:flex;
+      flex-direction:column;
+      gap: 14px;
+    }
+
+    header{
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap: 12px;
+      padding: 8px 6px 0;
+    }
+    .title{
+      display:flex;
+      flex-direction:column;
+      gap: 6px;
+    }
+    h1{
+      margin:0;
+      font-size: clamp(22px, 2.4vw, 34px);
+      letter-spacing: .2px;
+      line-height: 1.1;
+      color: rgba(255,255,255,.94);
+      text-shadow: 0 8px 22px rgba(0,0,0,.25);
+    }
+    .sub{
+      font-size: 14px;
+      color: rgba(255,255,255,.78);
+    }
+
+    .progressMeta{
+      display:flex;
+      flex-direction:column;
+      align-items:flex-end;
+      gap: 6px;
+      color: rgba(255,255,255,.84);
+      font-size: 14px;
+      text-shadow: 0 6px 18px rgba(0,0,0,.22);
+      min-width: 160px;
+    }
+
+    .bar{
+      height: 12px;
+      width: 100%;
+      border-radius: 999px;
+      background: rgba(255,255,255,.14);
+      border: 1px solid rgba(255,255,255,.18);
+      overflow:hidden;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.10);
+    }
+    .bar > div{
+      height:100%;
+      width:0%;
+      background: linear-gradient(90deg, rgba(225,29,46,.95), rgba(14,165,233,.80));
+      border-radius: 999px;
+      transition: width .35s ease;
+    }
+
+    main{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding: 8px 0 0;
+      flex: 1;
+    }
+
+    .card{
+      width: min(var(--card-max), 100%);
+      border-radius: var(--radius);
+      background: var(--glass);
+      border: 1px solid var(--stroke);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      padding: clamp(16px, 2.2vw, 24px);
+      position: relative;
+      overflow:hidden;
+    }
+    .card::before{
+      content:"";
+      position:absolute;
+      inset:-2px;
+      background: radial-gradient(900px 420px at 15% 0%, rgba(255,255,255,.14), transparent 55%);
+      pointer-events:none;
+    }
+
+    .qTop{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap: 14px;
+      position:relative;
+    }
+    .qType{
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--muted);
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(15,23,42,.08);
+      border: 1px solid rgba(15,23,42,.10);
+      align-self:flex-start;
+      user-select:none;
+    }
+    @media (prefers-color-scheme: dark){
+      .qType{
+        background: rgba(255,255,255,.08);
+        border-color: rgba(255,255,255,.10);
+      }
+    }
+
+    .qText{
+      margin: 10px 0 0;
+      font-size: clamp(18px, 2.0vw, 22px);
+      line-height: 1.35;
+      font-weight: 750;
+      color: var(--text);
+      position:relative;
+    }
+
+    .hint{
+      margin: 10px 0 0;
+      font-size: 14px;
+      color: var(--muted);
+      line-height:1.4;
+    }
+
+    .form{
+      margin-top: 18px;
+      display:flex;
+      flex-direction:column;
+      gap: 12px;
+      position:relative;
+    }
+
+    /* Inputs */
+    .optionList{
+      display:flex;
+      flex-direction:column;
+      gap: 10px;
+    }
+    label.opt{
+      display:flex;
+      align-items:flex-start;
+      gap: 10px;
+      padding: 12px 12px;
+      border-radius: var(--radius2);
+      background: rgba(255,255,255,.58);
+      border: 1px solid rgba(15,23,42,.12);
+      cursor:pointer;
+      transition: transform .05s ease, background .2s ease, border-color .2s ease;
+      box-shadow: var(--shadow2);
+    }
+    @media (prefers-color-scheme: dark){
+      label.opt{
+        background: rgba(17, 25, 40, .55);
+        border-color: rgba(255,255,255,.10);
+      }
+    }
+    label.opt:hover{
+      background: rgba(255,255,255,.72);
+      border-color: rgba(15,23,42,.18);
+    }
+    @media (prefers-color-scheme: dark){
+      label.opt:hover{
+        background: rgba(17, 25, 40, .70);
+        border-color: rgba(255,255,255,.14);
+      }
+    }
+    label.opt:active{ transform: translateY(1px); }
+
+    input[type="radio"], input[type="checkbox"]{
+      margin-top: 3px;
+      width: 18px;
+      height: 18px;
+      accent-color: var(--primary);
+      flex: 0 0 auto;
+    }
+    .optText{
+      font-size: 15px;
+      line-height: 1.35;
+    }
+
+    .field{
+      display:flex;
+      flex-direction:column;
+      gap: 8px;
+    }
+    .field label{
+      font-size: 14px;
+      color: var(--muted);
+      font-weight: 650;
+    }
+    input[type="text"], textarea, select{
+      width: 100%;
+      border-radius: 14px;
+      border: 1px solid rgba(15,23,42,.18);
+      background: rgba(255,255,255,.72);
+      padding: 12px 12px;
+      font-family: var(--font);
+      font-size: 15px;
+      color: var(--text);
+      outline:none;
+      box-shadow: var(--shadow2);
+      transition: box-shadow .2s ease, border-color .2s ease, background .2s ease;
+    }
+    textarea{ min-height: 130px; resize: vertical; }
+    textarea.small{ min-height: 92px; }
+    input[type="text"]::placeholder, textarea::placeholder{ color: rgba(71,85,105,.8); }
+
+    @media (prefers-color-scheme: dark){
+      input[type="text"], textarea, select{
+        background: rgba(17,25,40,.66);
+        border-color: rgba(255,255,255,.14);
+        color: var(--text);
+      }
+      input[type="text"]::placeholder, textarea::placeholder{ color: rgba(161,161,170,.85); }
+    }
+
+    input[type="text"]:focus, textarea:focus, select:focus{
+      box-shadow: var(--shadow2), var(--ring);
+      border-color: rgba(225,29,46,.55);
+    }
+
+    /* Mapping & ordering blocks */
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+    .row{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+      padding: 12px;
+      border-radius: var(--radius2);
+      background: rgba(255,255,255,.58);
+      border: 1px solid rgba(15,23,42,.12);
+      box-shadow: var(--shadow2);
+    }
+    @media (prefers-color-scheme: dark){
+      .row{
+        background: rgba(17,25,40,.55);
+        border-color: rgba(255,255,255,.10);
+      }
+    }
+    .row .left{
+      font-weight: 750;
+      font-size: 15px;
+    }
+    .row .right{
+      display:flex;
+      gap: 10px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(15,23,42,.08);
+      border: 1px solid rgba(15,23,42,.10);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .02em;
+      user-select:none;
+    }
+    @media (prefers-color-scheme: dark){
+      .pill{
+        background: rgba(255,255,255,.08);
+        border-color: rgba(255,255,255,.10);
+      }
+    }
+
+    /* Footer controls */
+    footer{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+      padding: 6px;
+      margin-top: 2px;
+    }
+    .btnRow{
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      flex-wrap:wrap;
+    }
+
+    .btn{
+      border: 1px solid transparent;
+      border-radius: 999px;
+      padding: 12px 16px;
+      font-weight: 780;
+      letter-spacing: .01em;
+      cursor:pointer;
+      transition: transform .05s ease, background .2s ease, border-color .2s ease, box-shadow .2s ease, opacity .2s ease;
+      font-family: var(--font);
+      font-size: 15px;
+      line-height: 1;
+      user-select:none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn:active{ transform: translateY(1px); }
+    .btn:disabled{
+      opacity:.55;
+      cursor:not-allowed;
+    }
+
+    .btnPrimary{
+      background: linear-gradient(180deg, var(--primary), var(--primary2));
+      color: var(--primary-ink);
+      box-shadow: 0 18px 40px rgba(225,29,46,.35), 0 10px 22px rgba(0,0,0,.25);
+      border-color: rgba(255,255,255,.12);
+      padding: 14px 18px;
+      font-size: 16px;
+      min-width: 190px;
+    }
+    .btnPrimary:hover{
+      box-shadow: 0 20px 46px rgba(225,29,46,.40), 0 10px 22px rgba(0,0,0,.28);
+    }
+    .btnPrimary:focus-visible{ outline:none; box-shadow: 0 20px 46px rgba(225,29,46,.40), 0 10px 22px rgba(0,0,0,.28), var(--ring); }
+
+    .btnSecondary{
+      background: var(--secondary);
+      color: rgba(255,255,255,.88);
+      border-color: rgba(255,255,255,.14);
+      box-shadow: 0 10px 26px rgba(0,0,0,.22);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+    .btnSecondary:hover{ background: var(--secondary-hover); }
+    .btnSecondary:focus-visible{ outline:none; box-shadow: 0 10px 26px rgba(0,0,0,.22), var(--ring); }
+
+    /* On light scheme, secondary should still be readable */
+    @media (prefers-color-scheme: light){
+      .btnSecondary{
+        color: rgba(255,255,255,.92);
+      }
+    }
+
+    .btnGhost{
+      background: rgba(255,255,255,.55);
+      color: var(--text);
+      border-color: rgba(15,23,42,.14);
+      box-shadow: var(--shadow2);
+    }
+    @media (prefers-color-scheme: dark){
+      .btnGhost{
+        background: rgba(17,25,40,.55);
+        border-color: rgba(255,255,255,.10);
+        color: var(--text);
+      }
+    }
+    .btnGhost:hover{ background: rgba(255,255,255,.70); }
+    @media (prefers-color-scheme: dark){
+      .btnGhost:hover{ background: rgba(17,25,40,.70); }
+    }
+    .btnGhost:focus-visible{ outline:none; box-shadow: var(--shadow2), var(--ring); }
+
+    /* Message */
+    .msg{
+      margin-top: 12px;
+      padding: 12px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(245, 158, 11, .35);
+      background: rgba(245, 158, 11, .14);
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.4;
+    }
+    @media (prefers-color-scheme: dark){
+      .msg{
+        background: rgba(245, 158, 11, .12);
+        border-color: rgba(245, 158, 11, .28);
+      }
+    }
+
+    /* Results */
+    .resultsTop{
+      display:flex;
+      flex-direction:column;
+      gap: 10px;
+      margin-top: 6px;
+    }
+    .resultsMeta{
+      display:flex;
+      flex-wrap:wrap;
+      gap: 10px;
+      align-items:center;
+    }
+    .stat{
+      display:inline-flex;
+      align-items:center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: rgba(255,255,255,.58);
+      border: 1px solid rgba(15,23,42,.12);
+      box-shadow: var(--shadow2);
+      font-weight: 780;
+    }
+    @media (prefers-color-scheme: dark){
+      .stat{
+        background: rgba(17,25,40,.55);
+        border-color: rgba(255,255,255,.10);
+      }
+    }
+    .stat small{
+      font-weight: 700;
+      color: var(--muted);
+    }
+
+    .tableWrap{
+      margin-top: 14px;
+      border-radius: var(--radius2);
+      border: 1px solid rgba(15,23,42,.12);
+      overflow:hidden;
+      box-shadow: var(--shadow2);
+    }
+    @media (prefers-color-scheme: dark){
+      .tableWrap{ border-color: rgba(255,255,255,.10); }
+    }
+    table{
+      width:100%;
+      border-collapse:collapse;
+      background: rgba(255,255,255,.62);
+    }
+    @media (prefers-color-scheme: dark){
+      table{ background: rgba(17,25,40,.62); }
+    }
+    th, td{
+      text-align:left;
+      padding: 12px 12px;
+      border-bottom: 1px solid rgba(15,23,42,.10);
+      vertical-align:top;
+      font-size: 14px;
+    }
+    @media (prefers-color-scheme: dark){
+      th, td{ border-bottom-color: rgba(255,255,255,.08); }
+    }
+    th{
+      font-size: 13px;
+      letter-spacing:.04em;
+      text-transform: uppercase;
+      color: var(--muted);
+      background: rgba(255,255,255,.40);
+    }
+    @media (prefers-color-scheme: dark){
+      th{ background: rgba(255,255,255,.06); }
+    }
+    tr:last-child td{ border-bottom:none; }
+
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 800;
+      border: 1px solid rgba(15,23,42,.12);
+      background: rgba(255,255,255,.58);
+      color: var(--text);
+      white-space:nowrap;
+    }
+    @media (prefers-color-scheme: dark){
+      .badge{
+        background: rgba(17,25,40,.62);
+        border-color: rgba(255,255,255,.10);
+      }
+    }
+    .bOk{ border-color: rgba(14,165,233,.28); background: rgba(14,165,233,.12); }
+    .bEmpty{ border-color: rgba(245,158,11,.28); background: rgba(245,158,11,.12); }
+
+    /* Utility */
+    .srOnly{
+      position:absolute !important;
+      width:1px;height:1px;
+      padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;
+    }
+    .divider{
+      height:1px;
+      background: rgba(15,23,42,.10);
+      margin: 14px 0;
+    }
+    @media (prefers-color-scheme: dark){
+      .divider{ background: rgba(255,255,255,.10); }
+    }
+
+    /* Responsive tweaks */
+    @media (max-width: 520px){
+      .btnPrimary{ width: 100%; min-width: auto; justify-content:center; }
+      footer{ flex-direction:column; align-items:stretch; }
+      .btnRow{ justify-content:space-between; }
+      .progressMeta{ align-items:flex-start; min-width: 0; }
+      header{ align-items:flex-start; flex-direction:column; }
+      .qTop{ flex-direction:column; align-items:flex-start; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="bg" aria-hidden="true"></div>
+
+  <div class="wrap">
+    <div class="app" role="application" aria-label="Internet-ABC Quiz Anwendung">
+      <header>
+        <div class="title">
+          <h1>Internet-ABC Quiz</h1>
+          <div class="sub" id="subline">Ein Offline-Quiz zum Kennenlernen von Internet-ABC (für erwachsene Lehrkräfte).</div>
+        </div>
+        <div class="progressMeta">
+          <div id="progressText" aria-label="Fortschritt">Frage 1 von 20</div>
+          <div class="bar" aria-hidden="true"><div id="progressBar"></div></div>
+        </div>
+      </header>
+
+      <main>
+        <section class="card" aria-labelledby="qTitle">
+          <div class="srOnly" aria-live="polite" aria-atomic="true" id="liveRegion"></div>
+
+          <div class="qTop">
+            <div class="qType" id="qTypePill">Frage</div>
+            <button class="btn btnGhost" id="backBtn" type="button" style="display:none;">Zurück</button>
+          </div>
+
+          <h2 class="qText" id="qTitle"></h2>
+          <p class="hint" id="qHint" style="display:none;"></p>
+
+          <form id="qForm" class="form" autocomplete="off" novalidate>
+            <!-- rendered here -->
+          </form>
+
+          <div id="message" class="msg" role="status" aria-live="polite" style="display:none;"></div>
+        </section>
+      </main>
+
+      <footer>
+        <div class="btnRow">
+          <button class="btn btnSecondary" id="restartBtn" type="button">Neu starten</button>
+        </div>
+
+        <div class="btnRow" style="justify-content:flex-end;">
+          <button class="btn btnPrimary" id="nextBtn" type="button">Nächste Frage ➜</button>
+        </div>
+      </footer>
+    </div>
+  </div>
+
+  <script>
+    "use strict";
+
+    /* =========================================================
+       Data: exactly the 20 questions requested (mixed formats)
+       No auto-correction; we only collect answers.
+       ========================================================= */
+
+    const QUIZ_TITLE = "Internet-ABC Quiz";
+
+    const questions = [
+      {
+        id: 1,
+        type: "open",
+        text: "Wie heißen die vier Tiere, die durch das Internet-ABC führen?",
+        hint: "Nenne alle vier Namen (Komma-getrennt).",
+        allowEmpty: false
+      },
+      {
+        id: 2,
+        type: "single",
+        text: "Welches dieser Tiere gehört NICHT zum Internet-ABC?",
+        options: ["Eddie", "Flizzy", "Jumpy", "Hektor", "Percy"],
+        allowEmpty: false
+      },
+      {
+        id: 3,
+        type: "truefalse",
+        text: "Richtig oder falsch: Der Surfschein ist ausschließlich für Eltern gedacht.",
+        allowEmpty: false
+      },
+      {
+        id: 4,
+        type: "short",
+        text: "Wie heißt der Internet-Führerschein für Kinder beim Internet-ABC?",
+        hint: "Ein Wort / Begriff.",
+        allowEmpty: false
+      },
+      {
+        id: 5,
+        type: "multi",
+        text: "Welche dieser Begriffe klingen nach echten Angeboten/Spielen beim Internet-ABC?",
+        options: ["Surfschein", "Daten-Detektiv", "Passwort-Chaos", "Chat-Abenteuer", "Internet-Führerschein-Rennen"],
+        hint: "Einige Optionen sind erfunden – wähle die, die du für echt hältst.",
+        allowEmpty: false
+      },
+      {
+        id: 6,
+        type: "open",
+        text: "Wo würdest du auf der Seite nach Unterrichtsmaterialien als PDF suchen? Beschreibe den Navigationsweg.",
+        hint: "Recherche: Öffne Internet-ABC und beschreibe Menü → Bereich → Unterseite.",
+        allowEmpty: false
+      },
+      {
+        id: 7,
+        type: "match",
+        text: "Ordne den Bereichen die passenden Schwerpunkte zu.",
+        hint: "Nutze die Dropdowns.",
+        pairs: [
+          { left: "Im Netz unterwegs", right: "Grundlagen & Orientierung" },
+          { left: "Mitreden & Mitmachen", right: "Kommunikation & Teilhabe" },
+          { left: "Achtung, die Gefahren!", right: "Sicherheit & Risiken" },
+          { left: "Lesen, Hören, Sehen", right: "Medien verstehen" }
+        ],
+        allowEmpty: false
+      },
+      {
+        id: 8,
+        type: "single",
+        text: "Welche Zielgruppe wird auf Internet-ABC direkt angesprochen?",
+        options: ["Kinder", "Eltern", "Lehrkräfte", "Alle drei"],
+        allowEmpty: false
+      },
+      {
+        id: 9,
+        type: "open",
+        text: "Nenne zwei Themen, die du im Bereich ‚Achtung, die Gefahren!‘ erwarten würdest.",
+        allowEmpty: false
+      },
+      {
+        id: 10,
+        type: "order",
+        text: "Bringe die Schritte für einen typischen Surfschein-Ablauf in eine sinnvolle Reihenfolge.",
+        items: ["Vorbereitung im Unterricht", "Bearbeitung der Lernmodule", "Abschlussquiz", "Urkundenvergabe"],
+        allowEmpty: false
+      },
+      {
+        id: 11,
+        type: "short",
+        text: "Wie heißt der Bereich des Internet-ABC, der sich speziell an Eltern richtet?",
+        hint: "Recherche auf der Website.",
+        allowEmpty: false
+      },
+      {
+        id: 12,
+        type: "open",
+        text: "Du planst einen Elternabend zum Thema ‚Sicher chatten‘: Welche Rubrik nutzt du zuerst und warum?",
+        allowEmpty: false
+      },
+      {
+        id: 13,
+        type: "truefalse",
+        text: "Richtig oder falsch: Die Kinderinhalte sind so gestaltet, dass sie auch ohne Lesen gut nutzbar sind (z. B. Audio/Icons).",
+        hint: "Beurteile nach deinem Eindruck.",
+        allowEmpty: false
+      },
+      {
+        id: 14,
+        type: "multi",
+        text: "Welche Materialarten erwartest du im Lehrkräftebereich?",
+        options: ["Arbeitsblätter", "Projektideen", "Elternbriefe", "Fertige Klassenarbeiten", "Methodenhinweise"],
+        allowEmpty: false
+      },
+      {
+        id: 15,
+        type: "short",
+        text: "Welche Klassenstufen (oder Altersgruppe) sind aus deiner Sicht die Hauptzielgruppe des Surfscheins?",
+        hint: "Schätzung reicht.",
+        allowEmpty: false
+      },
+      {
+        id: 16,
+        type: "open",
+        text: "Gibt es beim Internet-ABC einen Bereich/Angebote für jüngere Kinder? Wenn ja: Wie wird er kindgerecht gemacht?",
+        hint: "Recherche: Beschreibe kurz, was du findest.",
+        allowEmpty: false
+      },
+      {
+        id: 17,
+        type: "scale",
+        text: "Wie niedrigschwellig ist die Plattform für Kinder?",
+        hint: "1 = schwierig, 5 = sehr leicht. Begründe kurz.",
+        scale: [1,2,3,4,5],
+        extraField: { label: "Kurze Begründung", placeholder: "Optional: kurze Begründung …" },
+        allowEmpty: false
+      },
+      {
+        id: 18,
+        type: "open",
+        text: "Welche drei Inhalte würdest du sofort im Unterricht einsetzen und warum?",
+        allowEmpty: false
+      },
+      {
+        id: 19,
+        type: "open",
+        text: "Formuliere eine eigene Quizfrage für Kinder zum Thema ‚Passwörter‘ (inkl. richtiger Antwort).",
+        allowEmpty: false
+      },
+      {
+        id: 20,
+        type: "open",
+        text: "Was hast du durch die Auseinandersetzung mit dem Internet-ABC neu entdeckt?",
+        hint: "Optional.",
+        allowEmpty: true
+      }
+    ];
+
+    /* =========================================================
+       State
+       ========================================================= */
+    let currentIndex = 0;
+
+    // answers: [{ id, type, value, timestampISO }]
+    const answers = questions.map(q => ({
+      id: q.id,
+      type: q.type,
+      value: null,
+      timestampISO: null
+    }));
+
+    /* =========================================================
+       Elements
+       ========================================================= */
+    const el = {
+      progressText: document.getElementById("progressText"),
+      progressBar: document.getElementById("progressBar"),
+      qTitle: document.getElementById("qTitle"),
+      qHint: document.getElementById("qHint"),
+      qForm: document.getElementById("qForm"),
+      qTypePill: document.getElementById("qTypePill"),
+      message: document.getElementById("message"),
+      nextBtn: document.getElementById("nextBtn"),
+      restartBtn: document.getElementById("restartBtn"),
+      backBtn: document.getElementById("backBtn"),
+      liveRegion: document.getElementById("liveRegion")
+    };
+
+    /* =========================================================
+       Helpers
+       ========================================================= */
+    const typeLabel = (type) => {
+      const map = {
+        single: "Single Choice",
+        multi: "Multiple Choice",
+        truefalse: "Richtig/Falsch",
+        short: "Kurzantwort",
+        open: "Offene Antwort",
+        match: "Zuordnung",
+        order: "Reihenfolge",
+        scale: "Skala 1–5"
+      };
+      return map[type] || "Frage";
+    };
+
+    const showMessage = (text) => {
+      el.message.textContent = text;
+      el.message.style.display = "block";
+    };
+    const clearMessage = () => {
+      el.message.textContent = "";
+      el.message.style.display = "none";
+    };
+
+    const announce = (text) => {
+      // short ARIA live update
+      el.liveRegion.textContent = "";
+      // ensure change is detected
+      window.setTimeout(() => {
+        el.liveRegion.textContent = text;
+      }, 30);
+    };
+
+    const isEmptyValue = (val) => {
+      if (val === null || val === undefined) return true;
+      if (typeof val === "string") return val.trim().length === 0;
+      if (Array.isArray(val)) return val.length === 0;
+      if (typeof val === "object") {
+        return Object.keys(val).length === 0;
+      }
+      return false;
+    };
+
+    const focusFirstInput = () => {
+      // focus first interactive element inside form
+      const focusable = el.qForm.querySelector("input, textarea, select, button");
+      if (focusable) focusable.focus({ preventScroll: true });
+    };
+
+    const sanitizeText = (s) => String(s ?? "").trim();
+
+    /* =========================================================
+       Rendering
+       ========================================================= */
+    function renderQuestion() {
+      clearMessage();
+
+      const q = questions[currentIndex];
+      const total = questions.length;
+      const num = currentIndex + 1;
+
+      // progress
+      el.progressText.textContent = `Frage ${num} von ${total}`;
+      el.progressBar.style.width = `${Math.round((num - 1) / total * 100)}%`;
+
+      // title + hint
+      el.qTitle.textContent = q.text;
+      if (q.hint) {
+        el.qHint.textContent = q.hint;
+        el.qHint.style.display = "block";
+      } else {
+        el.qHint.style.display = "none";
+      }
+
+      el.qTypePill.textContent = typeLabel(q.type);
+
+      // back button (optional)
+      el.backBtn.style.display = currentIndex > 0 ? "inline-flex" : "none";
+
+      // render inputs
+      el.qForm.innerHTML = "";
+      const existing = answers[currentIndex]?.value;
+
+      switch (q.type) {
+        case "single":
+          el.qForm.appendChild(renderSingleChoice(q, existing));
+          break;
+        case "multi":
+          el.qForm.appendChild(renderMultiChoice(q, existing));
+          break;
+        case "truefalse":
+          el.qForm.appendChild(renderTrueFalse(q, existing));
+          break;
+        case "short":
+          el.qForm.appendChild(renderShort(q, existing));
+          break;
+        case "open":
+          el.qForm.appendChild(renderOpen(q, existing));
+          break;
+        case "match":
+          el.qForm.appendChild(renderMatch(q, existing));
+          break;
+        case "order":
+          el.qForm.appendChild(renderOrder(q, existing));
+          break;
+        case "scale":
+          el.qForm.appendChild(renderScale(q, existing));
+          break;
+        default:
+          el.qForm.appendChild(renderOpen(q, existing));
+      }
+
+      // update next button label near end
+      if (currentIndex === total - 1) {
+        el.nextBtn.textContent = "Auswertung ➜";
+      } else {
+        el.nextBtn.textContent = "Nächste Frage ➜";
+      }
+
+      // announce & focus
+      announce(`Frage ${num} von ${total}: ${typeLabel(q.type)}`);
+      window.setTimeout(focusFirstInput, 60);
+    }
+
+    function renderSingleChoice(q, existing) {
+      const wrap = document.createElement("div");
+      wrap.className = "optionList";
+      const name = `q_${q.id}`;
+
+      q.options.forEach((opt, i) => {
+        const id = `${name}_${i}`;
+        const lab = document.createElement("label");
+        lab.className = "opt";
+        lab.setAttribute("for", id);
+
+        const input = document.createElement("input");
+        input.type = "radio";
+        input.name = name;
+        input.id = id;
+        input.value = opt;
+        input.checked = (existing === opt);
+
+        const span = document.createElement("div");
+        span.className = "optText";
+        span.textContent = opt;
+
+        lab.appendChild(input);
+        lab.appendChild(span);
+        wrap.appendChild(lab);
+      });
+
+      return wrap;
+    }
+
+    function renderMultiChoice(q, existing) {
+      const wrap = document.createElement("div");
+      wrap.className = "optionList";
+      const name = `q_${q.id}`;
+      const selected = Array.isArray(existing) ? existing : [];
+
+      q.options.forEach((opt, i) => {
+        const id = `${name}_${i}`;
+        const lab = document.createElement("label");
+        lab.className = "opt";
+        lab.setAttribute("for", id);
+
+        const input = document.createElement("input");
+        input.type = "checkbox";
+        input.name = name;
+        input.id = id;
+        input.value = opt;
+        input.checked = selected.includes(opt);
+
+        const span = document.createElement("div");
+        span.className = "optText";
+        span.textContent = opt;
+
+        lab.appendChild(input);
+        lab.appendChild(span);
+        wrap.appendChild(lab);
+      });
+
+      return wrap;
+    }
+
+    function renderTrueFalse(q, existing) {
+      const wrap = document.createElement("div");
+      wrap.className = "optionList";
+      const name = `q_${q.id}`;
+
+      const options = ["Richtig", "Falsch"];
+      options.forEach((opt, i) => {
+        const id = `${name}_${i}`;
+        const lab = document.createElement("label");
+        lab.className = "opt";
+        lab.setAttribute("for", id);
+
+        const input = document.createElement("input");
+        input.type = "radio";
+        input.name = name;
+        input.id = id;
+        input.value = opt;
+        input.checked = (existing === opt);
+
+        const span = document.createElement("div");
+        span.className = "optText";
+        span.textContent = opt;
+
+        lab.appendChild(input);
+        lab.appendChild(span);
+        wrap.appendChild(lab);
+      });
+
+      return wrap;
+    }
+
+    function renderShort(q, existing) {
+      const wrap = document.createElement("div");
+      wrap.className = "field";
+
+      const label = document.createElement("label");
+      label.setAttribute("for", `q_${q.id}_short`);
+      label.textContent = "Deine Antwort";
+
+      const input = document.createElement("input");
+      input.type = "text";
+      input.id = `q_${q.id}_short`;
+      input.placeholder = "Antwort eingeben …";
+      input.value = typeof existing === "string" ? existing : "";
+
+      wrap.appendChild(label);
+      wrap.appendChild(input);
+      return wrap;
+    }
+
+    function renderOpen(q, existing) {
+      const wrap = document.createElement("div");
+      wrap.className = "field";
+
+      const label = document.createElement("label");
+      label.setAttribute("for", `q_${q.id}_open`);
+      label.textContent = "Deine Antwort";
+
+      const ta = document.createElement("textarea");
+      ta.id = `q_${q.id}_open`;
+      ta.placeholder = "Antwort eingeben …";
+      ta.value = typeof existing === "string" ? existing : "";
+
+      wrap.appendChild(label);
+      wrap.appendChild(ta);
+      return wrap;
+    }
+
+    function renderMatch(q, existing) {
+      // existing is object: { leftText: chosenRightText, ... }
+      const saved = (existing && typeof existing === "object" && !Array.isArray(existing)) ? existing : {};
+
+      const wrap = document.createElement("div");
+      wrap.className = "grid";
+
+      // right-side choices are the right texts (unique)
+      const rights = q.pairs.map(p => p.right);
+
+      q.pairs.forEach((pair, idx) => {
+        const row = document.createElement("div");
+        row.className = "row";
+
+        const left = document.createElement("div");
+        left.className = "left";
+        left.textContent = pair.left;
+
+        const right = document.createElement("div");
+        right.className = "right";
+
+        const pill = document.createElement("span");
+        pill.className = "pill";
+        pill.textContent = "Zuordnen";
+
+        const select = document.createElement("select");
+        select.id = `q_${q.id}_match_${idx}`;
+        select.setAttribute("data-left", pair.left);
+
+        const opt0 = document.createElement("option");
+        opt0.value = "";
+        opt0.textContent = "Bitte wählen …";
+        select.appendChild(opt0);
+
+        rights.forEach(r => {
+          const o = document.createElement("option");
+          o.value = r;
+          o.textContent = r;
+          select.appendChild(o);
+        });
+
+        const savedVal = saved[pair.left] ?? "";
+        select.value = savedVal;
+
+        right.appendChild(pill);
+        right.appendChild(select);
+
+        row.appendChild(left);
+        row.appendChild(right);
+        wrap.appendChild(row);
+      });
+
+      return wrap;
+    }
+
+    function renderOrder(q, existing) {
+      // existing is object: { itemText: number, ... } where number is 1..n
+      const saved = (existing && typeof existing === "object" && !Array.isArray(existing)) ? existing : {};
+
+      const wrap = document.createElement("div");
+      wrap.className = "grid";
+
+      const n = q.items.length;
+      const nums = Array.from({length:n}, (_,i) => i+1);
+
+      q.items.forEach((item, idx) => {
+        const row = document.createElement("div");
+        row.className = "row";
+
+        const left = document.createElement("div");
+        left.className = "left";
+        left.textContent = item;
+
+        const right = document.createElement("div");
+        right.className = "right";
+
+        const pill = document.createElement("span");
+        pill.className = "pill";
+        pill.textContent = "Reihenfolge";
+
+        const select = document.createElement("select");
+        select.id = `q_${q.id}_order_${idx}`;
+        select.setAttribute("data-item", item);
+
+        const opt0 = document.createElement("option");
+        opt0.value = "";
+        opt0.textContent = "Nr. …";
+        select.appendChild(opt0);
+
+        nums.forEach(num => {
+          const o = document.createElement("option");
+          o.value = String(num);
+          o.textContent = String(num);
+          select.appendChild(o);
+        });
+
+        const savedVal = saved[item] ?? "";
+        select.value = savedVal === null ? "" : String(savedVal);
+
+        right.appendChild(pill);
+        right.appendChild(select);
+
+        row.appendChild(left);
+        row.appendChild(right);
+        wrap.appendChild(row);
+      });
+
+      // small helper note
+      const note = document.createElement("div");
+      note.className = "hint";
+      note.textContent = "Tipp: Jede Nummer sollte genau einmal vergeben werden.";
+      wrap.appendChild(note);
+
+      return wrap;
+    }
+
+    function renderScale(q, existing) {
+      // existing is object: { rating: "1".."5", reason: "..." }
+      const saved = (existing && typeof existing === "object" && !Array.isArray(existing)) ? existing : { rating: "", reason: "" };
+      const rating = sanitizeText(saved.rating);
+      const reason = typeof saved.reason === "string" ? saved.reason : "";
+
+      const wrap = document.createElement("div");
+
+      const list = document.createElement("div");
+      list.className = "optionList";
+      const name = `q_${q.id}_scale`;
+
+      q.scale.forEach((num, i) => {
+        const id = `${name}_${i}`;
+        const lab = document.createElement("label");
+        lab.className = "opt";
+        lab.setAttribute("for", id);
+
+        const input = document.createElement("input");
+        input.type = "radio";
+        input.name = name;
+        input.id = id;
+        input.value = String(num);
+        input.checked = rating === String(num);
+
+        const span = document.createElement("div");
+        span.className = "optText";
+        span.textContent = `${num}`;
+
+        lab.appendChild(input);
+        lab.appendChild(span);
+        list.appendChild(lab);
+      });
+
+      const field = document.createElement("div");
+      field.className = "field";
+      const label = document.createElement("label");
+      label.setAttribute("for", `q_${q.id}_reason`);
+      label.textContent = q.extraField?.label || "Begründung";
+
+      const ta = document.createElement("textarea");
+      ta.className = "small";
+      ta.id = `q_${q.id}_reason`;
+      ta.placeholder = q.extraField?.placeholder || "Kurze Begründung …";
+      ta.value = reason;
+
+      field.appendChild(label);
+      field.appendChild(ta);
+
+      wrap.appendChild(list);
+      wrap.appendChild(field);
+      return wrap;
+    }
+
+    /* =========================================================
+       Read current answer from DOM
+       ========================================================= */
+    function readAnswerForCurrent() {
+      const q = questions[currentIndex];
+
+      switch (q.type) {
+        case "single": {
+          const checked = el.qForm.querySelector('input[type="radio"]:checked');
+          return checked ? checked.value : "";
+        }
+        case "multi": {
+          const checked = Array.from(el.qForm.querySelectorAll('input[type="checkbox"]:checked')).map(i => i.value);
+          return checked;
+        }
+        case "truefalse": {
+          const checked = el.qForm.querySelector('input[type="radio"]:checked');
+          return checked ? checked.value : "";
+        }
+        case "short": {
+          const input = el.qForm.querySelector('input[type="text"]');
+          return input ? input.value : "";
+        }
+        case "open": {
+          const ta = el.qForm.querySelector('textarea');
+          return ta ? ta.value : "";
+        }
+        case "match": {
+          const obj = {};
+          const selects = Array.from(el.qForm.querySelectorAll("select[data-left]"));
+          selects.forEach(s => {
+            const left = s.getAttribute("data-left");
+            const val = s.value;
+            if (left) obj[left] = val; // keep empty string if not chosen (for completeness)
+          });
+          return obj;
+        }
+        case "order": {
+          const obj = {};
+          const selects = Array.from(el.qForm.querySelectorAll("select[data-item]"));
+          selects.forEach(s => {
+            const item = s.getAttribute("data-item");
+            const val = s.value; // "" or "1".."n"
+            if (item) obj[item] = val;
+          });
+          return obj;
+        }
+        case "scale": {
+          const checked = el.qForm.querySelector('input[type="radio"]:checked');
+          const rating = checked ? checked.value : "";
+          const ta = el.qForm.querySelector("textarea");
+          const reason = ta ? ta.value : "";
+          return { rating, reason };
+        }
+        default: {
+          const ta = el.qForm.querySelector('textarea');
+          return ta ? ta.value : "";
+        }
+      }
+    }
+
+    /* =========================================================
+       Validation rules
+       - Friendly message if required question is empty
+       - allowEmpty controlled per question (e.g., Q20)
+       ========================================================= */
+    function validateAnswer(q, value) {
+      if (q.allowEmpty) return true;
+
+      // For mapping/order: treat empty if any required selection missing
+      if (q.type === "match" && value && typeof value === "object") {
+        const keys = q.pairs.map(p => p.left);
+        const allChosen = keys.every(k => sanitizeText(value[k]).length > 0);
+        return allChosen;
+      }
+      if (q.type === "order" && value && typeof value === "object") {
+        const keys = q.items;
+        const chosen = keys.map(k => sanitizeText(value[k]));
+        const allChosen = chosen.every(v => v.length > 0);
+        if (!allChosen) return false;
+        // Also gently ensure numbers are unique (still just validation, no correction)
+        const set = new Set(chosen);
+        return set.size === chosen.length;
+      }
+      if (q.type === "scale" && value && typeof value === "object") {
+        return sanitizeText(value.rating).length > 0;
+      }
+
+      return !isEmptyValue(value);
+    }
+
+    /* =========================================================
+       Persist answer to state
+       ========================================================= */
+    function saveCurrentAnswer() {
+      const q = questions[currentIndex];
+      const value = readAnswerForCurrent();
+      answers[currentIndex] = {
+        id: q.id,
+        type: q.type,
+        value: value,
+        timestampISO: new Date().toISOString()
+      };
+    }
+
+    /* =========================================================
+       Navigation
+       ========================================================= */
+    function goNext() {
+      const q = questions[currentIndex];
+      const value = readAnswerForCurrent();
+
+      if (!validateAnswer(q, value)) {
+        showMessage("Bitte beantworte die Frage, bevor du weitergehst.");
+        // focus first field
+        focusFirstInput();
+        return;
+      }
+
+      saveCurrentAnswer();
+      clearMessage();
+
+      if (currentIndex < questions.length - 1) {
+        currentIndex += 1;
+        renderQuestion();
+      } else {
+        renderResults();
+      }
+    }
+
+    function goBack() {
+      // Save current (even if empty) to not lose work when navigating back
+      saveCurrentAnswer();
+      clearMessage();
+      currentIndex = Math.max(0, currentIndex - 1);
+      renderQuestion();
+    }
+
+    function restart() {
+      if (!confirm("Möchtest du das Quiz wirklich neu starten? Alle bisherigen Antworten gehen verloren.")) return;
+      for (let i = 0; i < answers.length; i++) {
+        answers[i].value = null;
+        answers[i].timestampISO = null;
+      }
+      currentIndex = 0;
+      // reset progress visuals
+      el.progressBar.style.width = "0%";
+      renderQuestion();
+    }
+
+    /* =========================================================
+       Results view
+       ========================================================= */
+    function renderResults() {
+      // Save last answer even if user clicked on "Auswertung" and it was valid already.
+      saveCurrentAnswer();
+
+      // progress bar to 100%
+      el.progressText.textContent = `Fertig — ${questions.length} Fragen`;
+      el.progressBar.style.width = "100%";
+
+      // Hide back button in results (optional)
+      el.backBtn.style.display = "none";
+
+      // Compute answered vs empty
+      const summary = questions.map((q, idx) => {
+        const a = answers[idx];
+        const empty = isConsideredEmpty(q, a?.value);
+        return { q, a, empty };
+      });
+
+      const answeredCount = summary.filter(s => !s.empty).length;
+      const emptyCount = summary.length - answeredCount;
+
+      // Replace card content
+      el.qTypePill.textContent = "Ergebnis";
+      el.qTitle.textContent = "Auswertung & Export";
+      el.qHint.style.display = "none";
+      el.qForm.innerHTML = "";
+      clearMessage();
+
+      const top = document.createElement("div");
+      top.className = "resultsTop";
+
+      const meta = document.createElement("div");
+      meta.className = "resultsMeta";
+
+      const stat1 = document.createElement("div");
+      stat1.className = "stat";
+      stat1.innerHTML = `<span aria-hidden="true">✅</span> ${answeredCount} <small>beantwortet</small>`;
+
+      const stat2 = document.createElement("div");
+      stat2.className = "stat";
+      stat2.innerHTML = `<span aria-hidden="true">⏳</span> ${emptyCount} <small>leer gelassen</small>`;
+
+      meta.appendChild(stat1);
+      meta.appendChild(stat2);
+
+      const p = document.createElement("p");
+      p.className = "hint";
+      p.textContent = "Hinweis: Es gibt keine automatische Auswertung — die Antworten werden nur gesammelt und können als JSON exportiert oder kopiert werden.";
+
+      top.appendChild(meta);
+      top.appendChild(p);
+
+      const controls = document.createElement("div");
+      controls.className = "btnRow";
+      controls.style.marginTop = "6px";
+      controls.style.gap = "10px";
+
+      const downloadBtn = document.createElement("button");
+      downloadBtn.type = "button";
+      downloadBtn.className = "btn btnPrimary";
+      downloadBtn.textContent = "Antworten als JSON herunterladen";
+      downloadBtn.addEventListener("click", downloadJSON);
+
+      const copyBtn = document.createElement("button");
+      copyBtn.type = "button";
+      copyBtn.className = "btn btnGhost";
+      copyBtn.textContent = "Antworten kopieren";
+      copyBtn.addEventListener("click", copyJSONToClipboard);
+
+      controls.appendChild(downloadBtn);
+      controls.appendChild(copyBtn);
+
+      const tableWrap = document.createElement("div");
+      tableWrap.className = "tableWrap";
+
+      const table = document.createElement("table");
+      table.setAttribute("aria-label", "Zusammenfassung der Antworten");
+
+      const thead = document.createElement("thead");
+      thead.innerHTML = `
+        <tr>
+          <th style="width:70px;">Nr.</th>
+          <th>Frage</th>
+          <th style="width:160px;">Status</th>
+        </tr>
+      `;
+      table.appendChild(thead);
+
+      const tbody = document.createElement("tbody");
+
+      summary.forEach((s, i) => {
+        const tr = document.createElement("tr");
+        const status = s.empty
+          ? `<span class="badge bEmpty">⏳ Leer</span>`
+          : `<span class="badge bOk">✅ Beantwortet</span>`;
+
+        tr.innerHTML = `
+          <td><strong>${i + 1}</strong></td>
+          <td>${escapeHTML(s.q.text)}</td>
+          <td>${status}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      table.appendChild(tbody);
+      tableWrap.appendChild(table);
+
+      el.qForm.appendChild(top);
+      el.qForm.appendChild(controls);
+      el.qForm.appendChild(document.createElement("div")).className = "divider";
+      el.qForm.appendChild(tableWrap);
+
+      // Footer: show restart only, and hide next
+      el.nextBtn.style.display = "none";
+      el.restartBtn.style.display = "inline-flex";
+
+      announce("Ergebnisseite geöffnet. Du kannst deine Antworten herunterladen oder kopieren.");
+      // Focus primary action
+      window.setTimeout(() => downloadBtn.focus({preventScroll:true}), 60);
+    }
+
+    function isConsideredEmpty(q, value) {
+      if (q.allowEmpty) {
+        // Still show as empty if truly empty, but it's allowed.
+        return isEmptyValueForType(q, value);
+      }
+      return isEmptyValueForType(q, value);
+    }
+
+    function isEmptyValueForType(q, value) {
+      if (q.type === "match" && value && typeof value === "object") {
+        const keys = q.pairs.map(p => p.left);
+        return !keys.some(k => sanitizeText(value[k]).length > 0);
+      }
+      if (q.type === "order" && value && typeof value === "object") {
+        const keys = q.items;
+        return !keys.some(k => sanitizeText(value[k]).length > 0);
+      }
+      if (q.type === "scale" && value && typeof value === "object") {
+        const r = sanitizeText(value.rating);
+        const rsn = sanitizeText(value.reason);
+        return (r.length === 0 && rsn.length === 0);
+      }
+      if (Array.isArray(value)) return value.length === 0;
+      if (typeof value === "string") return value.trim().length === 0;
+      if (value === null || value === undefined) return true;
+      return false;
+    }
+
+    function buildExportObject() {
+      const payload = {
+        meta: {
+          title: QUIZ_TITLE,
+          dateISO: new Date().toISOString()
+        },
+        answers: answers.map(a => ({
+          id: a.id,
+          type: a.type,
+          value: a.value
+        }))
+      };
+      return payload;
+    }
+
+    function downloadJSON() {
+      const payload = buildExportObject();
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "internet-abc-quiz-antworten.json";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+
+      URL.revokeObjectURL(url);
+      showMessage("Download gestartet: internet-abc-quiz-antworten.json");
+    }
+
+    async function copyJSONToClipboard() {
+      const payload = buildExportObject();
+      const text = JSON.stringify(payload, null, 2);
+
+      try{
+        await navigator.clipboard.writeText(text);
+        showMessage("JSON wurde in die Zwischenablage kopiert.");
+      } catch (e) {
+        // Fallback: create temporary textarea
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        ta.style.position = "fixed";
+        ta.style.left = "-9999px";
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        try{
+          document.execCommand("copy");
+          showMessage("JSON wurde in die Zwischenablage kopiert.");
+        } catch {
+          showMessage("Kopieren nicht möglich. Bitte nutze stattdessen den Download.");
+        } finally {
+          ta.remove();
+        }
+      }
+    }
+
+    function escapeHTML(str){
+      return String(str)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    /* =========================================================
+       Keyboard enhancements
+       - Enter on text inputs goes next (except textarea)
+       - Ctrl/Cmd+Enter in textarea goes next
+       ========================================================= */
+    function attachKeyboardShortcuts() {
+      document.addEventListener("keydown", (ev) => {
+        // In results view, ignore next
+        const nextVisible = el.nextBtn && el.nextBtn.style.display !== "none";
+
+        if (!nextVisible) return;
+
+        const tag = (ev.target && ev.target.tagName) ? ev.target.tagName.toLowerCase() : "";
+        const isTextarea = tag === "textarea";
+        const isTextInput = tag === "input" && (ev.target.type === "text" || ev.target.type === "search");
+
+        if (ev.key === "Enter" && isTextInput) {
+          ev.preventDefault();
+          goNext();
+        }
+        if (ev.key === "Enter" && isTextarea && (ev.ctrlKey || ev.metaKey)) {
+          ev.preventDefault();
+          goNext();
+        }
+      });
+    }
+
+    /* =========================================================
+       Events
+       ========================================================= */
+    el.nextBtn.addEventListener("click", goNext);
+    el.restartBtn.addEventListener("click", restart);
+    el.backBtn.addEventListener("click", goBack);
+
+    // Ensure form doesn't submit anywhere
+    el.qForm.addEventListener("submit", (e) => e.preventDefault());
+
+    attachKeyboardShortcuts();
+
+    /* =========================================================
+       Initial render
+       ========================================================= */
+    renderQuestion();
+  </script>
+</body>
+</html>
